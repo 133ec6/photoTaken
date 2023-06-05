@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Capture</title>
+</head>
+<body>
+    <button id="capture-btn">Capture Photo</button>
+    <video id="video-feed" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        const videoFeed = document.getElementById('video-feed');
+        const captureButton = document.getElementById('capture-btn');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // Access the camera and start the video feed
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                videoFeed.srcObject = stream;
+            })
+            .catch((error) => {
+                console.log('Error accessing camera: ', error);
+            });
+
+        // Capture photo when the button is clicked
+        captureButton.addEventListener('click', () => {
+            // Draw the current video frame onto the canvas
+            context.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas image to base64 data
+            const imageData = canvas.toDataURL('image/png');
+
+            // Send the captured photo to the server for storage
+            fetch('/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: imageData })
+            })
+            .then((response) => {
+                console.log('Image data uploaded:', response);
+            })
+            .catch((error) => {
+                console.error('Error uploading image data:', error);
+            });
+        });
+    </script>
+</body>
+</html>
